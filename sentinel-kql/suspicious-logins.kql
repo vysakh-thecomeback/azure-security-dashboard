@@ -1,0 +1,6 @@
+// suspicious-logins.kql
+SigninLogs
+| where ResultType != 0
+| summarize FailedCount = count() by UserPrincipalName, bin(TimeGenerated, 1h)
+| top 10 by FailedCount desc
+| project TimeGenerated, UserPrincipalName, FailedCount

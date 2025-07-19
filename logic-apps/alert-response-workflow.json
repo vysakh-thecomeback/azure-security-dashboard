@@ -1,0 +1,57 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "actions": {
+      "Condition": {
+        "actions": {
+          "Send_email": {
+            "inputs": {
+              "body": {
+                "ContentType": "HTML",
+                "Content": "<h3>🚨 High-severity alert from Defender</h3><p><b>@{triggerBody()?['properties/alertDisplayName']}</b><br/>Resource: @{triggerBody()?['properties/targetResourceName']}<br/>Time: @{triggerBody()?['properties/occurredTimeUtc']}</p>"
+              },
+              "subject": "🛡️ Defender Alert: @{triggerBody()?['properties/alertDisplayName']}",
+              "to": ["securityteam@example.com"]
+            },
+            "runAfter": {},
+            "type": "SendEmail"
+          }
+        },
+        "expression": {
+          "and": [
+            {
+              "equals": [
+                "@{triggerBody()?['properties/severity']}",
+                "High"
+              ]
+            }
+          ]
+        },
+        "runAfter": {
+          "When_a_response_is_received": ["Succeeded"]
+        },
+        "type": "If"
+      }
+    },
+    "triggers": {
+      "When_a_response_is_received": {
+        "inputs": {
+          "method": "GET",
+          "uri": "@parameters('alertsEndpoint')"
+        },
+        "recurrence": {
+          "frequency": "Minute",
+          "interval": 5
+        },
+        "type": "Http"
+      }
+    },
+    "contentVersion": "1.0.0.0"
+  },
+  "parameters": {
+    "alertsEndpoint": {
+      "type": "String",
+      "defaultValue": "https://management.azure.com/subscriptions/<YOUR_SUBSCRIPTION_ID>/providers/Microsoft.SecurityAlerts/alerts?api-version=2023-01-01-preview"
+    }
+  }
+}
